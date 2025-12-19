@@ -9,6 +9,7 @@ A blockchain-based digital certificate system built on Sui for schools to issue 
 - **On-chain Verification**: All certificates are verifiable on the Sui blockchain
 - **Permanent Records**: Certificates are stored as immutable objects
 - **Registry Tracking**: Centralized registry tracks all issued certificates
+- **Web Interface**: React-based UI for easy certificate minting (no terminal required!)
 
 ## 🏗️ Architecture
 
@@ -154,6 +155,37 @@ Created Objects:
 ```
 
 ## 💼 Usage Guide
+
+You can mint certificates in two ways:
+1. **React Web Interface** (Recommended) - Easy-to-use UI
+2. **Terminal Commands** - For automation and scripting
+
+### Option 1: Using React Web Interface (Recommended)
+
+The easiest way to mint certificates is through the web interface:
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies (first time only)
+npm install
+
+# Configure your contract IDs in src/config.js
+# Update PACKAGE_ID, ISSUER_CAP, and REGISTRY with your deployment values
+
+# Start the development server
+npm run dev
+```
+
+Then open your browser to `http://localhost:5173` and:
+1. Connect your Sui wallet
+2. Fill in the student details
+3. Click "Mint Certificate"
+
+See [frontend/README.md](frontend/README.md) for detailed setup instructions.
+
+### Option 2: Using Terminal Commands
 
 ### As a School (Certificate Issuer)
 
