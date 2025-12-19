@@ -1,0 +1,10 @@
+package id: 0x0c2a64cfaae920dbf3676530161a271df7f940fc67ccbfd678c8e5cd7a6f63b2
+issuercap :0x0c2a64cfaae920dbf3676530161a271df7f940fc67ccbfd678c8e5cd7a6f63b2
+myaddress: 0xf68c1111153d4ef421280d6ce4f6367dfee606ac655e01727010412d4bb75ac7``
+
+sui client call \
+  --package 0x0c2a64cfaae920dbf3676530161a271df7f940fc67ccbfd678c8e5cd7a6f63b2 \
+  --module cert \
+  --function issue_certificate \
+  --args 0xca457b2afcbd7df7490c5488f173f0e2467ffc045bab553d4a5c28d964504b72 0xf68c1111153d4ef421280d6ce4f6367dfee606ac655e01727010412d4bb75ac7 "Doan Gia Bao" "STU001" "Blockchain Development" 1735516800 "CERT-001" \
+  --gas-budget 10000000
