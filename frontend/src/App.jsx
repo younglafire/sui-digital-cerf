@@ -2,29 +2,17 @@ import { useState } from 'react'
 import { ConnectButton, useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
 import './App.css'
-import { PACKAGE_ID, MODULE_NAME, ISSUER_CAP_ID, SCHOOL_NAME, DEFAULT_DEGREE_PROGRAM } from './config'
+import { PACKAGE_ID, MODULE_NAME, SCHOOL_NAME } from './config'
 
 function App() {
   const [studentName, setStudentName] = useState('')
+  const [course, setCourse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [certificateCount, setCertificateCount] = useState(0)
   
   const currentAccount = useCurrentAccount()
   const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction()
-
-  // Generate auto-incrementing ID (like SQL primary key)
-  const generateCertificateId = () => {
-    const newCount = certificateCount + 1
-    setCertificateCount(newCount)
-    return `CERT-${SCHOOL_NAME.toUpperCase().replace(/\s+/g, '-')}-${String(newCount).padStart(6, '0')}`
-  }
-
-  // Generate student ID
-  const generateStudentId = () => {
-    const timestamp = Date.now()
-    return `STU-${String(timestamp).slice(-8)}`
-  }
 
   const handleIssueCertificate = async (e) => {
     e.preventDefault()
@@ -34,14 +22,14 @@ function App() {
       return
     }
 
-    // Allow certificate issuance without wallet for now
-    // In a real scenario, you'd need wallet connection for blockchain interaction
+    if (!course.trim()) {
+      setMessage('Please enter a course name')
+      return
+    }
+
+    // Require wallet connection for blockchain interaction
     if (!currentAccount) {
-      // For demo purposes, show success message even without wallet
-      const certId = generateCertificateId()
-      const stuId = generateStudentId()
-      setMessage(`🎓 Success! Certificate issued!\n\nStudent: ${studentName}\nStudent ID: ${stuId}\nCertificate ID: ${certId}\nSchool: ${SCHOOL_NAME}\n\n(Note: Connect wallet to save on blockchain)`)
-      setStudentName('')
+      setMessage('⚠️ Please connect your wallet to issue a certificate on the blockchain')
       return
     }
 
@@ -50,26 +38,16 @@ function App() {
 
     try {
       const tx = new Transaction()
-      const certId = generateCertificateId()
-      const stuId = generateStudentId()
-      const currentDate = Math.floor(Date.now() / 1000) // Unix timestamp
 
       // Convert strings to byte arrays for Move contract
       const studentNameBytes = Array.from(new TextEncoder().encode(studentName))
-      const studentIdBytes = Array.from(new TextEncoder().encode(stuId))
-      const degreeProgramBytes = Array.from(new TextEncoder().encode(DEFAULT_DEGREE_PROGRAM))
-      const certificateIdBytes = Array.from(new TextEncoder().encode(certId))
+      const courseBytes = Array.from(new TextEncoder().encode(course))
 
       tx.moveCall({
         target: `${PACKAGE_ID}::${MODULE_NAME}::issue_certificate`,
         arguments: [
-          tx.object(ISSUER_CAP_ID),
-          tx.pure.address(currentAccount.address),
           tx.pure(studentNameBytes),
-          tx.pure(studentIdBytes),
-          tx.pure(degreeProgramBytes),
-          tx.pure.u64(currentDate),
-          tx.pure(certificateIdBytes),
+          tx.pure(courseBytes),
         ],
       })
 
@@ -77,8 +55,10 @@ function App() {
         transaction: tx,
       })
 
-      setMessage(`🎓 Certificate issued successfully!\n\nStudent: ${studentName}\nStudent ID: ${stuId}\nCertificate ID: ${certId}\nSchool: ${SCHOOL_NAME}\n\nTransaction: ${result.digest}`)
+      setCertificateCount(certificateCount + 1)
+      setMessage(`🎓 Certificate issued successfully!\n\nStudent: ${studentName}\nCourse: ${course}\nSchool: ${SCHOOL_NAME}\n\nTransaction: ${result.digest}`)
       setStudentName('')
+      setCourse('')
     } catch (error) {
       console.error('Error issuing certificate:', error)
       setMessage(`❌ Error: ${error.message}`)
@@ -101,8 +81,7 @@ function App() {
         <div className="certificate-form-container">
           <h3>Receive Your Digital Certificate</h3>
           <p className="instruction">
-            Enter your name below to receive your digital certificate from {SCHOOL_NAME}.
-            {!currentAccount && ' (You can receive a certificate preview without connecting your wallet)'}
+            Connect your wallet and enter your details to receive your digital certificate from {SCHOOL_NAME} on the blockchain.
           </p>
 
           <form onSubmit={handleIssueCertificate} className="certificate-form">
@@ -119,24 +98,35 @@ function App() {
               />
             </div>
 
+            <div className="form-group">
+              <label htmlFor="course">Course Name:</label>
+              <input
+                type="text"
+                id="course"
+                value={course}
+                onChange={(e) => setCourse(e.target.value)}
+                placeholder="e.g., Blockchain Development"
+                className="input-field"
+                disabled={isLoading}
+              />
+            </div>
+
             <div className="info-section">
               <p><strong>School:</strong> {SCHOOL_NAME}</p>
-              <p><strong>Program:</strong> {DEFAULT_DEGREE_PROGRAM}</p>
-              <p><strong>Certificate ID:</strong> Auto-generated</p>
-              <p><strong>Student ID:</strong> Auto-generated</p>
+              <p><strong>Note:</strong> Certificate will be issued to your connected wallet address</p>
             </div>
 
             <button 
               type="submit" 
               className="submit-button"
-              disabled={isLoading}
+              disabled={isLoading || !currentAccount}
             >
-              {isLoading ? 'Processing...' : '🎓 Receive Certificate'}
+              {isLoading ? 'Processing...' : '🎓 Issue Certificate'}
             </button>
           </form>
 
           {message && (
-            <div className={`message ${message.includes('Error') || message.includes('❌') ? 'error' : 'success'}`}>
+            <div className={`message ${message.includes('Error') || message.includes('❌') || message.includes('⚠️') ? 'error' : 'success'}`}>
               <pre>{message}</pre>
             </div>
           )}
@@ -146,10 +136,11 @@ function App() {
           <h3>ℹ️ About Digital Certificates</h3>
           <ul>
             <li>🔒 Secure blockchain-based certificates</li>
-            <li>🎯 Each certificate has a unique ID</li>
+            <li>🎓 Store your name and course on-chain</li>
             <li>✅ Verifiable and tamper-proof</li>
             <li>🌐 Accessible from anywhere</li>
             <li>💎 Stored as NFTs on the Sui blockchain</li>
+            <li>🔑 Only you can issue your own certificate</li>
           </ul>
 
           <div className="stats">
