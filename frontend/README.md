@@ -1,20 +1,20 @@
 # Sui Digital Certificate System - Frontend
 
-A React-based frontend application for the Sui Digital Certificate System. This application allows students to connect their Sui wallets and request digital certificates for the "Move on Sui" course from Sui School.
+A React-based frontend application for the Sui Digital Certificate System. This application allows students to connect their Sui wallets and mint digital certificates directly on the Sui blockchain for the "Move on Sui" course from Sui School.
 
 ## Features
 
 - 🔐 **Sui Wallet Integration** - Connect with any Sui-compatible wallet
-- 📝 **Simple Certificate Request** - One-click certificate minting via backend API
+- 📝 **Direct On-Chain Minting** - Students sign transactions with their own wallet
 - ⚡ **Real-time Status** - Loading states and transaction feedback
 - 🎨 **Clean UI** - Modern, responsive design
-- 🔒 **Security First** - No private keys or issuer authority in frontend
+- 🔒 **Security First** - Transactions signed by student's wallet, school controls IssuerCap
 
 ## Prerequisites
 
 - Node.js 18+ and npm
 - A Sui-compatible wallet (e.g., Sui Wallet, Suiet)
-- Backend API running (for certificate minting)
+- Deployed smart contract on Sui (see `../student_cerf/`)
 
 ## Installation
 
@@ -25,19 +25,44 @@ npm install
 
 ## Configuration
 
-1. Copy the environment example file:
+### 1. Deploy the Smart Contract
+
+First, deploy the smart contract and note the output:
+
 ```bash
+cd ../student_cerf
+sui client publish --gas-budget 100000000
+```
+
+Save these values from the deployment output:
+- **Package ID**: `0x...`
+- **IssuerCap Object ID**: `0x...` (owned by school)
+- **Registry Object ID**: `0x...` (shared object)
+
+### 2. Configure Frontend
+
+Copy the environment example file:
+```bash
+cd ../frontend
 cp .env.example .env
 ```
 
-2. Configure your environment variables in `.env`:
+Edit `.env` and add your contract IDs:
 ```env
-# Backend API URL for minting certificates
-VITE_BACKEND_API_URL=http://localhost:3000
-
 # Sui Network (testnet, devnet, mainnet)
 VITE_SUI_NETWORK=testnet
+
+# Package ID from deployment
+VITE_PACKAGE_ID=0xYOUR_PACKAGE_ID_HERE
+
+# IssuerCap Object ID (owned by school)
+VITE_ISSUER_CAP_ID=0xYOUR_ISSUER_CAP_ID_HERE
+
+# Registry Object ID (shared object)
+VITE_REGISTRY_ID=0xYOUR_REGISTRY_ID_HERE
 ```
+
+**Important**: Replace the placeholder values with your actual contract IDs from the deployment.
 
 ## Development
 
@@ -75,12 +100,13 @@ npm run preview
    - Enter your full name in the form
    - Review the course and school information (pre-filled)
    - Click "Request Certificate"
-   - Wait for the backend to process the minting
+   - Sign the transaction in your wallet when prompted
+   - Wait for the transaction to be confirmed on-chain
 
 3. **Success**
-   - Upon success, you'll see a confirmation message
+   - Upon success, you'll see a confirmation message with transaction digest
    - Your certificate will be minted and transferred to your wallet address
-   - You can view it in your Sui wallet
+   - You can view it in your Sui wallet or on the Sui explorer
 
 ### Certificate Details
 
@@ -92,50 +118,65 @@ npm run preview
 
 ## Architecture
 
+### How It Works
+
+**Direct On-Chain Minting:**
+1. Student connects their Sui wallet to the frontend
+2. Student enters their name and submits the form
+3. Frontend creates a transaction calling `mint_certificate`
+4. Transaction uses school's IssuerCap (referenced by object ID)
+5. Student signs the transaction with their wallet
+6. Certificate is minted and transferred to student's address
+
+**Why This Works:**
+- The `mint_certificate` function requires the IssuerCap as an argument
+- IssuerCap is owned by the school, but can be referenced by its object ID
+- Students sign the transaction, but the IssuerCap proves school authorization
+- The certificate is transferred directly to the student's wallet
+
 ### Frontend Flow
 
 ```
-User → Connect Wallet → Enter Name → Submit Form → Backend API → Sui Blockchain
+User → Connect Wallet → Enter Name → Sign Transaction → Sui Blockchain → Certificate Minted
 ```
 
 ### Key Components
 
 - **WalletConnection** - Handles Sui wallet connection UI
-- **CertificateMintForm** - Form for certificate request
+- **CertificateMintForm** - Form for certificate request and transaction signing
+- **config.ts** - Smart contract configuration (Package ID, IssuerCap ID, Registry ID)
 - **App** - Main application container
 
 ### Security Design
 
-✅ **No Private Keys** - Frontend never handles private keys
-✅ **No IssuerCap** - Frontend doesn't have minting authority
-✅ **Backend-Triggered** - All minting happens through secure backend
+✅ **Student Signs Transaction** - Students use their own wallet to sign
+✅ **School Controls IssuerCap** - IssuerCap remains owned by school
+✅ **Direct On-Chain** - No intermediary backend needed
 ✅ **Address Verification** - Connected wallet address is used
+✅ **No Private Keys** - Frontend never handles private keys
 
-## Backend API Integration
+## Smart Contract Integration
 
-The frontend expects a backend API with the following endpoint:
+The frontend directly calls the Sui smart contract:
 
-### POST /mint-certificate
+### Transaction Details
 
-Request body:
-```json
-{
-  "studentAddress": "0x...",
-  "studentName": "John Doe",
-  "course": "Move on Sui",
-  "school": "Sui School",
-  "issueDate": 1734573600
-}
-```
+**Function Called**: `mint_certificate`
 
-Response:
-```json
-{
-  "success": true,
-  "message": "Certificate minted successfully",
-  "transactionDigest": "0x...",
-  "certificateId": "1"
-}
+**Arguments**:
+- `IssuerCap` - School's issuer capability (by object ID reference)
+- `Registry` - Shared registry object (by object ID reference)
+- `student` - Student's wallet address
+- `student_name` - Entered by student
+- `course` - Fixed: "Move on Sui"
+- `issue_date` - Current Unix timestamp
+
+**What Happens**:
+1. Transaction is created with the smart contract call
+2. Student signs the transaction with their wallet
+3. Transaction is executed on Sui blockchain
+4. Certificate is minted and transferred to student
+5. Registry is updated to prevent duplicates
 ```
 
 ## Tech Stack
@@ -153,13 +194,14 @@ Response:
 frontend/
 ├── src/
 │   ├── components/
-│   │   ├── WalletConnection.tsx   # Wallet connection UI
+│   │   ├── WalletConnection.tsx    # Wallet connection UI
 │   │   └── CertificateMintForm.tsx # Certificate request form
+│   ├── config.ts                   # Smart contract configuration
 │   ├── App.tsx                     # Main application
 │   ├── App.css                     # Application styles
 │   ├── main.tsx                    # Entry point with providers
 │   └── index.css                   # Global styles
-├── .env                            # Environment configuration
+├── .env                            # Environment configuration (not committed)
 ├── .env.example                    # Environment template
 ├── package.json                    # Dependencies
 └── vite.config.ts                  # Vite configuration
@@ -167,23 +209,41 @@ frontend/
 
 ## Troubleshooting
 
+### "Missing required environment variables" Error
+
+**Problem**: You see an error about missing `VITE_PACKAGE_ID`, `VITE_ISSUER_CAP_ID`, or `VITE_REGISTRY_ID`.
+
+**Solution**: 
+1. Make sure you've created a `.env` file: `cp .env.example .env`
+2. Deploy the smart contract if you haven't: `cd ../student_cerf && sui client publish --gas-budget 100000000`
+3. Copy the Package ID, IssuerCap ID, and Registry ID from deployment output
+4. Add them to your `.env` file
+
 ### Wallet Connection Issues
 
-- Ensure you have a Sui wallet installed
-- Check that your wallet is connected to the correct network (testnet)
+- Ensure you have a Sui wallet installed (Sui Wallet, Suiet, etc.)
+- Check that your wallet is connected to the correct network (testnet/devnet/mainnet)
 - Try refreshing the page and reconnecting
+- Make sure your wallet extension is unlocked
 
-### Backend Connection Issues
+### "Failed to fetch" or Connection Errors
 
-- Verify the backend API is running
-- Check `VITE_BACKEND_API_URL` in your `.env` file
-- Check browser console for CORS errors
+**This should no longer happen!** The frontend now calls the blockchain directly, not a backend API.
+
+If you still see this error:
+- Check your `.env` file has all required variables
+- Verify the contract IDs are correct
+- Make sure you're on the correct network
 
 ### Transaction Failures
 
-- Ensure the backend has sufficient SUI tokens for gas
-- Verify the backend has the IssuerCap
-- Check that you haven't already received a certificate (duplicates not allowed)
+**"Already has certificate"**: Each student can only receive one certificate. Check if you already have one in your wallet.
+
+**"Insufficient gas"**: Make sure your wallet has SUI tokens for gas fees. Get testnet tokens: `sui client faucet`
+
+**"Object not found"**: Verify your contract IDs in `.env` are correct from your deployment.
+
+**Transaction rejected**: Make sure you approve the transaction in your wallet when prompted.
 
 ## Contributing
 
