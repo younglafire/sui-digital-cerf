@@ -1,6 +1,12 @@
 // Sui Network Configuration
 export const NETWORK = 'testnet'; // Change to 'mainnet' for production
 
+// Explorer URL based on network
+export const EXPLORER_URL = {
+  testnet: 'https://suiscan.xyz/testnet',
+  mainnet: 'https://suiscan.xyz/mainnet',
+};
+
 // Contract Configuration
 // These values should be updated after deploying the contract
 export const CONTRACT_CONFIG = {

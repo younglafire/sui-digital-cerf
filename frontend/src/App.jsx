@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import { ConnectButton, useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
-import { CONTRACT_CONFIG, SETUP_INSTRUCTIONS } from './config'
+import { CONTRACT_CONFIG, SETUP_INSTRUCTIONS, NETWORK, EXPLORER_URL } from './config'
 
 function App() {
   const account = useCurrentAccount()
@@ -191,7 +191,7 @@ function App() {
                   Transaction Digest: <code>{txResult.digest}</code>
                 </p>
                 <a 
-                  href={`https://suiscan.xyz/testnet/tx/${txResult.digest}`}
+                  href={`${EXPLORER_URL[NETWORK]}/tx/${txResult.digest}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="view-tx-link"
