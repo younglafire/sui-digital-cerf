@@ -1,14 +1,22 @@
 # Sui Digital Certificate System
 
-A blockchain-based digital certificate system built on Sui for schools to issue verifiable certificates to students. This smart contract ensures that only authorized issuers (schools) can mint certificates, and each student can receive exactly one certificate, preventing duplicates permanently.
+A blockchain-based digital certificate system built on Sui for schools to issue verifiable certificates to students. This project includes both a Sui Move smart contract and a React frontend for certificate issuance.
 
 ## 🎯 Features
 
+### Smart Contract
 - **Secure Issuance**: Only the school (holding `IssuerCap`) can mint certificates
 - **Duplicate Prevention**: Each student can receive exactly one certificate
 - **On-chain Verification**: All certificates are verifiable on the Sui blockchain
 - **Permanent Records**: Certificates are stored as immutable objects
 - **Registry Tracking**: Centralized registry tracks all issued certificates
+
+### Frontend Application
+- **Sui Wallet Integration**: Connect with any Sui-compatible wallet
+- **Simple Certificate Request**: Students can request certificates with one click
+- **Real-time Status**: Loading states and transaction feedback
+- **Clean UI**: Modern, responsive design
+- **Security First**: No private keys or issuer authority in frontend
 
 ## 🏗️ Architecture
 
@@ -76,13 +84,19 @@ sui client gas
 
 ## 🚀 Getting Started
 
-### 1. Clone and Navigate
+This project has two main components:
+1. **Smart Contract** (`student_cerf/`) - Sui Move contract for certificate management
+2. **Frontend** (`frontend/`) - React application for students to request certificates
+
+### Smart Contract Setup
+
+#### 1. Clone and Navigate
 
 ```bash
 cd student_cerf
 ```
 
-### 2. Build the Contract
+#### 2. Build the Contract
 
 ```bash
 # Build the Move package
@@ -153,6 +167,48 @@ Created Objects:
     Owner: Shared
 ```
 
+### Frontend Setup
+
+#### 1. Navigate to Frontend Directory
+
+```bash
+cd ../frontend
+```
+
+#### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+#### 3. Configure Environment
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env and set your backend API URL
+# VITE_BACKEND_API_URL=http://localhost:3000
+# VITE_SUI_NETWORK=testnet
+```
+
+#### 4. Start Development Server
+
+```bash
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173`
+
+#### 5. Build for Production
+
+```bash
+npm run build
+npm run preview  # Preview the production build
+```
+
+For detailed frontend documentation, see [frontend/README.md](frontend/README.md)
+
 ## 💼 Usage Guide
 
 ### As a School (Certificate Issuer)
@@ -191,6 +247,17 @@ sui client object $REGISTRY --json
 ```
 
 ### As a Student (Certificate Recipient)
+
+#### Using the Frontend (Recommended)
+
+1. Open the frontend application in your browser (`http://localhost:5173`)
+2. Click "Connect Wallet" and select your Sui wallet
+3. Enter your full name in the form
+4. Click "Request Certificate"
+5. Wait for the backend to process your request
+6. View your certificate in your Sui wallet
+
+#### Using CLI (Alternative)
 
 #### View Your Certificate
 
