@@ -5,19 +5,15 @@
 /// Each student can receive exactly one certificate, preventing duplicates.
 module student_cerf::student_cerf;
 
-use sui::object::{Self, UID};
-use sui::tx_context::{Self, TxContext};
-use sui::transfer;
-use std::string::{Self, String};
-use sui::table::{Self, Table};
+use std::string::String;
+use sui::table::Table;
 
 /// Error codes
 const EAlreadyHasCertificate: u64 = 1;
-const ENotAuthorized: u64 = 2;
 
 /// Certificate object - represents a digital certificate issued to a student
 public struct Certificate has key, store {
-    id: UID,
+    id: sui::object::UID,
     student: address,
     school_name: String,
     student_name: String,
@@ -29,13 +25,13 @@ public struct Certificate has key, store {
 /// IssuerCap - capability object that authorizes certificate issuance
 /// Only the school (owner of this object) can mint certificates
 public struct IssuerCap has key, store {
-    id: UID,
+    id: sui::object::UID,
     school_name: String,
 }
 
 /// Registry - tracks all issued certificates to prevent duplicates
 public struct Registry has key {
-    id: UID,
+    id: sui::object::UID,
     /// Maps student address to their certificate ID
     issued_certificates: Table<address, u64>,
     /// Counter for certificate IDs
@@ -44,21 +40,21 @@ public struct Registry has key {
 
 /// Module initializer - creates IssuerCap and Registry
 /// The IssuerCap is transferred to the deployer (school)
-fun init(ctx: &mut TxContext) {
+fun init(ctx: &mut sui::tx_context::TxContext) {
     // Create and transfer IssuerCap to the deployer (school)
     let issuer_cap = IssuerCap {
-        id: object::new(ctx),
-        school_name: string::utf8(b"Digital Certification School"),
+        id: sui::object::new(ctx),
+        school_name: std::string::utf8(b"Digital Certification School"),
     };
-    transfer::transfer(issuer_cap, tx_context::sender(ctx));
+    sui::transfer::transfer(issuer_cap, sui::tx_context::sender(ctx));
 
     // Create Registry as a shared object
     let registry = Registry {
-        id: object::new(ctx),
-        issued_certificates: table::new(ctx),
+        id: sui::object::new(ctx),
+        issued_certificates: sui::table::new(ctx),
         next_certificate_id: 1,
     };
-    transfer::share_object(registry);
+    sui::transfer::share_object(registry);
 }
 
 /// Mint a certificate for a student
@@ -73,41 +69,41 @@ public entry fun mint_certificate(
     student_name: vector<u8>,
     course: vector<u8>,
     issue_date: u64,
-    ctx: &mut TxContext
+    ctx: &mut sui::tx_context::TxContext
 ) {
     // Check if student already has a certificate
-    assert!(!table::contains(&registry.issued_certificates, student), EAlreadyHasCertificate);
+    assert!(!sui::table::contains(&registry.issued_certificates, student), EAlreadyHasCertificate);
 
     // Get the certificate ID
     let certificate_id = registry.next_certificate_id;
     
     // Create the certificate
     let certificate = Certificate {
-        id: object::new(ctx),
+        id: sui::object::new(ctx),
         student,
-        school_name: string::utf8(b"Digital Certification School"),
-        student_name: string::utf8(student_name),
-        course: string::utf8(course),
+        school_name: std::string::utf8(b"Digital Certification School"),
+        student_name: std::string::utf8(student_name),
+        course: std::string::utf8(course),
         issue_date,
         certificate_id,
     };
 
     // Record the certificate in the registry
-    table::add(&mut registry.issued_certificates, student, certificate_id);
+    sui::table::add(&mut registry.issued_certificates, student, certificate_id);
     registry.next_certificate_id = certificate_id + 1;
 
     // Transfer certificate to student
-    transfer::transfer(certificate, student);
+    sui::transfer::transfer(certificate, student);
 }
 
 /// Check if a student has a certificate
 public fun has_certificate(registry: &Registry, student: address): bool {
-    table::contains(&registry.issued_certificates, student)
+    sui::table::contains(&registry.issued_certificates, student)
 }
 
 /// Get certificate ID for a student (if they have one)
 public fun get_certificate_id(registry: &Registry, student: address): u64 {
-    *table::borrow(&registry.issued_certificates, student)
+    *sui::table::borrow(&registry.issued_certificates, student)
 }
 
 /// Get total number of certificates issued
@@ -142,6 +138,6 @@ public fun certificate_id(cert: &Certificate): u64 {
 
 #[test_only]
 /// Test-only function to create IssuerCap for testing
-public fun test_init(ctx: &mut TxContext) {
+public fun test_init(ctx: &mut sui::tx_context::TxContext) {
     init(ctx);
 }
