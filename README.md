@@ -251,16 +251,72 @@ sui client object <CERTIFICATE_OBJECT_ID> --json | jq '.owner'
 - Only the holder of `IssuerCap` can mint certificates
 - `IssuerCap` is transferred to the deployer (school) on initialization
 - Students cannot mint certificates for themselves
+- No public functions allow certificate minting without `IssuerCap`
 
 ### 2. Duplicate Prevention
 - Registry tracks all issued certificates by student address
-- `mint_certificate` checks if student already has a certificate
+- `mint_certificate` checks if student already has a certificate before minting
 - Transaction aborts with `EAlreadyHasCertificate` error if duplicate detected
+- Once registered, a student address is permanently marked as having a certificate
 
 ### 3. Immutable Certificates
 - Once issued, certificate data cannot be modified
 - Certificate ownership can be transferred but content is permanent
 - On-chain verification ensures authenticity
+
+### 4. Safe Query Functions
+- `get_certificate_id` includes safety checks to prevent panics
+- `has_certificate` provides safe way to check certificate existence before queries
+- All read operations are non-destructive
+
+## 🛡️ Security Audit Summary
+
+**Audit Date:** 2025-12-19
+
+### Security Analysis
+
+#### ✅ Strengths
+1. **Access Control:** Properly implemented capability-based access control ensures only authorized issuers can mint certificates
+2. **Duplicate Prevention:** Strong duplicate prevention mechanism using on-chain registry
+3. **Type Safety:** Sui Move's type system provides compile-time guarantees
+4. **Object-Centric Security:** Leverages Sui's object model for secure ownership transfer
+
+#### ⚠️ Considerations
+1. **IssuerCap Distribution:** The `create_issuer_cap` function allows creating new issuer capabilities. While this provides flexibility, schools should carefully control who receives these capabilities.
+2. **Registry is Shared:** The Registry is a shared object, meaning anyone can read from it. This is intentional for transparency, but schools should be aware that all certificate issuance is publicly visible.
+3. **No Revocation:** Once issued, certificates cannot be revoked or modified. This is by design for immutability, but schools may want to implement a separate revocation list if needed.
+
+#### 🔒 Best Practices Implemented
+- ✅ Capability-based access control (IssuerCap)
+- ✅ On-chain duplicate prevention (Registry)
+- ✅ Input validation (student address checks)
+- ✅ Safe error handling (assert! with error codes)
+- ✅ Minimal privilege design (students cannot mint)
+- ✅ Transparent operations (all transactions on-chain)
+
+### Threat Model
+
+**Threat:** Student attempts to mint certificate for themselves
+- **Mitigation:** Requires IssuerCap ownership, which students do not have
+
+**Threat:** Attacker attempts to mint duplicate certificates
+- **Mitigation:** Registry check prevents duplicate minting permanently
+
+**Threat:** Unauthorized party attempts to modify existing certificates
+- **Mitigation:** Certificates are immutable objects; modification is impossible
+
+**Threat:** IssuerCap is stolen or compromised
+- **Mitigation:** Standard wallet security applies; use hardware wallets and proper key management
+
+**Threat:** Registry data is manipulated
+- **Mitigation:** Registry is protected by Sui's consensus; only authorized functions can modify it
+
+### Recommendations for Deployment
+1. Use a hardware wallet or secure key management system for the school's IssuerCap
+2. Implement operational procedures for certificate issuance
+3. Consider implementing a monitoring system for certificate issuance events
+4. Backup IssuerCap object ID and Registry object ID securely
+5. Test thoroughly on testnet before mainnet deployment
 
 ## 🛠️ Development Workflow
 
