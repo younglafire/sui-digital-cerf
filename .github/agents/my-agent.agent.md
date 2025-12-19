@@ -5,8 +5,8 @@
 # For format details, see: https://gh.io/customagents/config
 
 name: Sui hackathon
-description:
-An agent that build fundamental move on sui for hackathon project. 
+description:An agent that build fundamental move on sui for hackathon project. 
+---
 
 # My Agent
 Your tasks are going to read the sui move docs, conventional stuff, to write code any guide me to understand it. not trying to do the most. 
