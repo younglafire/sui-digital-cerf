@@ -34,25 +34,18 @@ sui client publish --gas-budget 100000000 --network devnet
 
 ### 1.3 Save Deployment Information
 
-From the deployment output, save these values:
+From the deployment output, save the Package ID:
 
 **Example Output:**
 ```
 ----- Transaction Effects ----
 Status : Success
-Created Objects:
-  - ID: 0xabc123... , Owner: Account Address ( 0xdef456... )
-    [IssuerCap]
-  - ID: 0x789xyz... , Owner: Immutable
-    [Package]
-
 Published Objects:
   - Package ID: 0x789xyz...
 ```
 
-**Save these:**
-- **Package ID**: `0x789xyz...` (the Immutable object)
-- **IssuerCap Object ID**: `0xabc123...` (owned by your account)
+**Save this:**
+- **Package ID**: `0x789xyz...`
 
 ## Step 2: Configure Frontend
 
@@ -67,14 +60,12 @@ cd frontend
 Edit `src/config.js`:
 
 ```javascript
-// Replace with your actual values
+// Replace with your actual Package ID
 export const PACKAGE_ID = '0x789xyz...' // Your Package ID
-export const ISSUER_CAP_ID = '0xabc123...' // Your IssuerCap Object ID
 export const NETWORK = 'testnet' // or 'devnet', 'mainnet'
 
 // Customize if needed
 export const SCHOOL_NAME = 'Sui School'
-export const DEFAULT_DEGREE_PROGRAM = 'Blockchain Development'
 ```
 
 ### 2.3 Install Dependencies
@@ -102,10 +93,11 @@ npm run dev
 
 1. Click "Connect Wallet"
 2. Connect your Sui wallet
-3. Enter a name
-4. Click "Receive Certificate"
-5. Approve transaction in wallet
-6. Verify certificate is minted
+3. Enter your name
+4. Enter a course name
+5. Click "Issue Certificate"
+6. Approve transaction in wallet
+7. Verify certificate is minted to your wallet
 
 ## Step 4: Build for Production
 
@@ -188,21 +180,20 @@ Simply upload the contents of the `dist/` directory to your hosting provider.
 ### 6.2 Check Smart Contract
 
 - [ ] Verify contract on Sui Explorer
-- [ ] Check IssuerCap ownership
 - [ ] Test certificate issuance transaction
 
 ## Troubleshooting
 
 ### Issue: "Package ID is 0x0"
 
-**Solution**: Update `frontend/src/config.js` with actual deployment values.
+**Solution**: Update `frontend/src/config.js` with actual Package ID.
 
 ### Issue: Transaction Fails
 
 **Possible causes:**
 1. Insufficient gas - Add more SUI to your wallet
-2. Wrong IssuerCap ID - Verify the object ID
-3. Wrong network - Ensure frontend config matches contract network
+2. Wrong network - Ensure frontend config matches contract network
+3. Wallet not connected - Connect your wallet first
 
 ### Issue: Wallet Won't Connect
 
@@ -229,22 +220,20 @@ For production, you can use environment variables:
 Create `.env`:
 ```
 VITE_PACKAGE_ID=0x789xyz...
-VITE_ISSUER_CAP_ID=0xabc123...
 VITE_NETWORK=testnet
 ```
 
 Update `src/config.js`:
 ```javascript
 export const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID || '0x0'
-export const ISSUER_CAP_ID = import.meta.env.VITE_ISSUER_CAP_ID || '0x0'
 export const NETWORK = import.meta.env.VITE_NETWORK || 'testnet'
 ```
 
 ## Post-Deployment Checklist
 
 - [ ] Smart contract deployed successfully
-- [ ] Package ID and IssuerCap ID saved
-- [ ] Frontend configured with correct IDs
+- [ ] Package ID saved
+- [ ] Frontend configured with correct Package ID
 - [ ] Frontend deployed to hosting provider
 - [ ] Certificate issuance tested end-to-end
 - [ ] Documentation updated with deployment URL
@@ -281,10 +270,10 @@ Monitor `CertificateIssued` events on your contract.
 ## Security Considerations
 
 - ✅ Never commit private keys
-- ✅ Keep IssuerCap object ID secure
 - ✅ Use environment variables for sensitive data
 - ✅ Enable HTTPS in production
 - ✅ Regular security audits recommended
+- ✅ Anyone can issue their own certificate (by design)
 
 ## Support
 

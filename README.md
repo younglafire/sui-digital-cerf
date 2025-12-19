@@ -12,11 +12,12 @@ This project consists of two main components:
 ## Features
 
 - 🔒 **Secure & Immutable**: Certificates stored on Sui blockchain
-- 🆔 **Auto-Generated IDs**: Unique certificate and student IDs (SQL-like auto-increment)
+- 🔑 **Self-Issued**: Any student can issue their own certificate (no admin approval needed)
 - 🎯 **Soul-Bound Tokens**: Certificates cannot be transferred once issued
-- 🌐 **Easy Access**: Simple web interface - no blockchain knowledge required
+- 🌐 **Easy Access**: Simple web interface - just connect wallet
 - 💎 **NFT-Based**: Each certificate is a unique NFT
 - ✅ **Verifiable**: All certificates can be verified on-chain
+- 📝 **Simple Data**: Only stores student name and course on blockchain
 
 ## Project Structure
 
@@ -54,9 +55,7 @@ sui move build
 sui client publish --gas-budget 100000000
 ```
 
-**Save the following from the deployment output:**
-- Package ID
-- IssuerCap Object ID
+**Save the Package ID from the deployment output**
 
 ### 2. Configure Frontend
 
@@ -64,7 +63,6 @@ Navigate to `frontend/src/config.js` and update:
 
 ```javascript
 export const PACKAGE_ID = 'YOUR_PACKAGE_ID'
-export const ISSUER_CAP_ID = 'YOUR_ISSUER_CAP_OBJECT_ID'
 export const NETWORK = 'testnet' // or 'devnet', 'mainnet'
 ```
 
@@ -83,26 +81,25 @@ Visit `http://localhost:5173` to access the application.
 ### For Students
 
 1. Visit the web application
-2. Enter your full name
-3. Click "Receive Certificate"
-4. (Optional) Connect your Sui wallet to save the certificate on-chain
+2. Connect your Sui wallet
+3. Enter your full name
+4. Enter your course name
+5. Click "Issue Certificate"
+6. Approve the transaction in your wallet
+7. Certificate is minted and sent to your wallet!
 
 ### Certificate Details
 
 Each certificate includes:
-- **Student Name**: Provided by the user
-- **Student ID**: Auto-generated (format: `STU-XXXXXXXX`)
-- **Certificate ID**: Auto-generated (format: `CERT-SUI-SCHOOL-XXXXXX`)
-- **School**: Sui School
-- **Program**: Blockchain Development
-- **Issue Date**: Blockchain timestamp
-- **Issuer Address**: Contract deployer's address
+- **Student Name**: Your name
+- **Course**: Course you completed
+
+That's it! Simple and clean. No IDs, no admin approval needed.
 
 ### Smart Contract Functions
 
-- `init()`: Creates IssuerCap for the contract deployer
-- `issue_certificate()`: Issues a new certificate to a student
-- View functions: `get_student_name()`, `get_institution()`, etc.
+- `issue_certificate(name, course)`: Issue a certificate to yourself
+- View functions: `get_student_name()`, `get_course()`
 
 ## Screenshots
 

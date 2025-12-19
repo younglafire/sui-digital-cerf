@@ -33,9 +33,7 @@ sui move build
 sui client publish --gas-budget 100000000
 ```
 
-**IMPORTANT**: Copy these from the output:
-- Package ID (looks like `0x123abc...`)
-- IssuerCap Object ID (looks like `0x456def...`)
+**IMPORTANT**: Copy the Package ID from the output (looks like `0x123abc...`)
 
 ## Step 3: Configure Frontend
 
@@ -43,15 +41,12 @@ sui client publish --gas-budget 100000000
 cd frontend
 
 # Open config file
-# Edit src/config.js and replace:
-# - PACKAGE_ID with your Package ID
-# - ISSUER_CAP_ID with your IssuerCap Object ID
+# Edit src/config.js and replace PACKAGE_ID with your Package ID
 ```
 
 Example `src/config.js`:
 ```javascript
 export const PACKAGE_ID = '0x123abc...' // YOUR Package ID here
-export const ISSUER_CAP_ID = '0x456def...' // YOUR IssuerCap ID here
 export const NETWORK = 'testnet'
 ```
 
@@ -68,23 +63,25 @@ npm run dev
 ## Step 5: Test It Out! 🎉
 
 1. Open http://localhost:5173
-2. Enter a name (e.g., "John Doe")
-3. Click "🎓 Receive Certificate"
-4. See your certificate with auto-generated IDs!
+2. Click "Connect Wallet" and connect your Sui wallet
+3. Enter your name (e.g., "John Doe")
+4. Enter a course (e.g., "Blockchain Development")
+5. Click "🎓 Issue Certificate"
+6. Approve the transaction in your wallet
+7. Certificate minted to your wallet! 🎊
 
-## Optional: Connect Wallet
+## Wallet Setup
 
 1. Install Sui Wallet browser extension
 2. Create/import a wallet
 3. Switch to testnet
 4. Get testnet SUI from faucet: https://discord.gg/sui
-5. Click "Connect Wallet" on the app
-6. Issue a certificate - it will be saved on blockchain!
+5. You're ready to issue certificates!
 
 ## Troubleshooting
 
 ### "Package ID is 0x0"
-➜ Update `frontend/src/config.js` with your actual Package ID and IssuerCap ID
+➜ Update `frontend/src/config.js` with your actual Package ID
 
 ### "Cannot connect to server"
 ➜ Make sure you ran `npm run dev` in the frontend directory
@@ -92,8 +89,8 @@ npm run dev
 ### "Transaction failed"
 ➜ Check:
   - You have SUI tokens in your wallet
-  - IssuerCap ID is correct
   - Network matches (testnet/devnet)
+  - Wallet is connected
 
 ### "npm install fails"
 ➜ Try:

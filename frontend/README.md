@@ -1,20 +1,21 @@
 # Sui School Digital Certification Portal
 
-A React-based web application for issuing and managing digital certificates on the Sui blockchain.
+A React-based web application for issuing digital certificates on the Sui blockchain.
 
 ## Features
 
 - 🎓 Simple certificate issuance interface
-- 🔗 Sui wallet integration (optional for preview)
-- 🆔 Auto-generated certificate and student IDs
+- 🔗 Sui wallet integration (required)
+- 🔑 Self-issued certificates (no admin approval)
 - 💎 Blockchain-based certificate storage
 - ✨ Modern, responsive UI
+- 📝 Stores only name and course on-chain
 
 ## Prerequisites
 
 - Node.js (v16 or higher)
 - npm or yarn
-- Sui wallet extension (for blockchain transactions)
+- Sui wallet extension (required for transactions)
 
 ## Installation
 
@@ -29,11 +30,10 @@ Before running the app, update the contract details in `src/config.js`:
 
 ```javascript
 export const PACKAGE_ID = 'YOUR_DEPLOYED_PACKAGE_ID'
-export const ISSUER_CAP_ID = 'YOUR_ISSUER_CAP_OBJECT_ID'
 export const NETWORK = 'testnet' // or 'devnet', 'mainnet'
 ```
 
-### How to Get These Values
+### How to Get Package ID
 
 1. Deploy the Move contract:
    ```bash
@@ -43,7 +43,6 @@ export const NETWORK = 'testnet' // or 'devnet', 'mainnet'
 
 2. From the deployment output:
    - Copy the `Package ID` to `PACKAGE_ID`
-   - Find the `IssuerCap` object ID and copy it to `ISSUER_CAP_ID`
 
 ## Running the Application
 
@@ -56,37 +55,29 @@ The app will be available at `http://localhost:5173`
 
 ## Usage
 
-### Without Wallet (Preview Mode)
-
-1. Enter your name in the form
-2. Click "Receive Certificate"
-3. View the generated certificate details
-
-### With Wallet (Blockchain Mode)
-
 1. Click "Connect Wallet" and connect your Sui wallet
-2. Enter your name in the form
-3. Click "Receive Certificate"
-4. Approve the transaction in your wallet
-5. The certificate will be minted as an NFT and transferred to your address
+2. Enter your name
+3. Enter your course name
+4. Click "Issue Certificate"
+5. Approve the transaction in your wallet
+6. Certificate minted as NFT and sent to your wallet!
 
 ## Features Explained
 
-### Auto-Generated IDs
+### Certificate Data
 
-- **Certificate ID**: Format `CERT-SUI-SCHOOL-XXXXXX` (sequential)
-- **Student ID**: Format `STU-XXXXXXXX` (timestamp-based)
+Each certificate stores only:
+- **Student Name**: Your name
+- **Course**: Course you completed
 
-### Certificate Details
+Simple and clean - no IDs or timestamps stored on-chain.
 
-Each certificate includes:
-- Student Name
-- Student ID (auto-generated)
-- Certificate ID (auto-generated)
-- School Name: "Sui School"
-- Degree Program: "Blockchain Development"
-- Issue Date (blockchain timestamp)
-- Issuer Address
+### Self-Issuance
+
+- Anyone can issue their own certificate
+- No admin approval required
+- Certificate automatically sent to your wallet
+- You control your own credentials
 
 ## Building for Production
 
@@ -125,7 +116,7 @@ frontend/
 
 Make sure you've:
 1. Deployed the Move contract
-2. Updated `PACKAGE_ID` and `ISSUER_CAP_ID` in `src/config.js`
+2. Updated `PACKAGE_ID` in `src/config.js`
 
 ### Wallet Connection Issues
 
@@ -136,8 +127,8 @@ Make sure you've:
 ### Transaction Failures
 
 - Verify the contract is deployed on the correct network
-- Ensure the `IssuerCap` object ID is correct
 - Check that you have sufficient SUI for gas fees
+- Ensure wallet is connected
 
 ## License
 
