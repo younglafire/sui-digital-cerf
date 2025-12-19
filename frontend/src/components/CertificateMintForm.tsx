@@ -1,12 +1,15 @@
 import { useState } from 'react'
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
-import { Transaction } from '@mysten/sui/transactions'
-import { CONTRACT_CONFIG, validateConfig } from '../config'
+import { useCurrentAccount } from '@mysten/dapp-kit'
+
+interface MintResponse {
+  success: boolean
+  message: string
+  transactionDigest?: string
+  certificateId?: string
+}
 
 export function CertificateMintForm() {
   const currentAccount = useCurrentAccount()
-  const suiClient = useSuiClient()
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction()
   const [studentName, setStudentName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | ''; text: string }>({ type: '', text: '' })
@@ -28,17 +31,6 @@ export function CertificateMintForm() {
       return
     }
 
-    // Validate contract configuration
-    try {
-      validateConfig()
-    } catch (error) {
-      setStatusMessage({ 
-        type: 'error', 
-        text: error instanceof Error ? error.message : 'Contract configuration error' 
-      })
-      return
-    }
-
     setIsLoading(true)
     setStatusMessage({ type: '', text: '' })
 
@@ -46,68 +38,51 @@ export function CertificateMintForm() {
       // Generate current timestamp
       const issueDate = Math.floor(Date.now() / 1000)
 
-      // Create transaction block
-      const tx = new Transaction()
+      // Prepare payload for backend
+      const payload = {
+        studentAddress: currentAccount.address,
+        studentName: studentName.trim(),
+        course: COURSE_NAME,
+        school: SCHOOL_NAME,
+        issueDate: issueDate,
+      }
+
+      // Get backend API URL from environment
+      const backendUrl = import.meta.env.VITE_BACKEND_API_URL
+      if (!backendUrl) {
+        throw new Error('Backend API URL is not configured. Please set VITE_BACKEND_API_URL in your .env file.')
+      }
       
-      // Call the mint_certificate function
-      tx.moveCall({
-        target: `${CONTRACT_CONFIG.PACKAGE_ID}::student_cerf::mint_certificate`,
-        arguments: [
-          tx.object(CONTRACT_CONFIG.ISSUER_CAP_ID),    // IssuerCap
-          tx.object(CONTRACT_CONFIG.REGISTRY_ID),      // Registry (shared object)
-          tx.pure.address(currentAccount.address),      // student address
-          tx.pure.string(studentName.trim()),          // student_name
-          tx.pure.string(COURSE_NAME),                 // course
-          tx.pure.u64(issueDate),                      // issue_date
-        ],
+      // Call backend API to mint certificate
+      const response = await fetch(`${backendUrl}/mint-certificate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       })
 
-      // Sign and execute the transaction
-      signAndExecuteTransaction(
-        {
-          transaction: tx,
-        },
-        {
-          onSuccess: async (result) => {
-            console.log('Transaction successful:', result)
-            
-            // Wait for transaction to be confirmed
-            try {
-              await suiClient.waitForTransaction({
-                digest: result.digest,
-              })
-              
-              setStatusMessage({ 
-                type: 'success', 
-                text: `Certificate minted successfully! Transaction: ${result.digest.slice(0, 10)}...` 
-              })
-              setStudentName('') // Clear form on success
-            } catch (waitError) {
-              console.error('Error waiting for transaction:', waitError)
-              setStatusMessage({ 
-                type: 'success', 
-                text: `Transaction submitted! Digest: ${result.digest.slice(0, 10)}...` 
-              })
-              setStudentName('') // Clear form anyway
-            }
-            setIsLoading(false)
-          },
-          onError: (error) => {
-            console.error('Transaction error:', error)
-            setStatusMessage({ 
-              type: 'error', 
-              text: error.message || 'Failed to mint certificate. Please try again.' 
-            })
-            setIsLoading(false)
-          },
-        }
-      )
+      const data: MintResponse = await response.json()
+
+      if (response.ok && data.success) {
+        setStatusMessage({ 
+          type: 'success', 
+          text: `Certificate minted successfully! ${data.transactionDigest ? `Transaction: ${data.transactionDigest.slice(0, 10)}...` : ''}` 
+        })
+        setStudentName('') // Clear form on success
+      } else {
+        setStatusMessage({ 
+          type: 'error', 
+          text: data.message || 'Failed to mint certificate' 
+        })
+      }
     } catch (error) {
-      console.error('Error preparing transaction:', error)
+      console.error('Error minting certificate:', error)
       setStatusMessage({ 
         type: 'error', 
         text: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.' 
       })
+    } finally {
       setIsLoading(false)
     }
   }
