@@ -6,8 +6,7 @@
 
 name: Sui hackathon
 description:
----
-for hackathon
+An agent that build fundamental move on sui for hackathon project. 
 
 # My Agent
 Your tasks are going to read the sui move docs, conventional stuff, to write code any guide me to understand it. not trying to do the most. 
