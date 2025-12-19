@@ -20,7 +20,12 @@ const networks = {
   mainnet: { url: getFullnodeUrl('mainnet') },
 }
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  throw new Error('Failed to find the root element. Please ensure your HTML has a <div id="root"></div> element.')
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networks} defaultNetwork={network}>

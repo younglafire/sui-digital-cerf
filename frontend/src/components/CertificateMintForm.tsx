@@ -48,7 +48,10 @@ export function CertificateMintForm() {
       }
 
       // Get backend API URL from environment
-      const backendUrl = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000'
+      const backendUrl = import.meta.env.VITE_BACKEND_API_URL
+      if (!backendUrl) {
+        throw new Error('Backend API URL is not configured. Please set VITE_BACKEND_API_URL in your .env file.')
+      }
       
       // Call backend API to mint certificate
       const response = await fetch(`${backendUrl}/mint-certificate`, {
